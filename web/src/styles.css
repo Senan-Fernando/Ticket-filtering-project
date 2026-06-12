@@ -1,0 +1,124 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #222;
+  background: #fafafa;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 3rem;
+}
+
+header h1 {
+  font-size: 1.4rem;
+}
+
+header h1 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a {
+  color: #35516e;
+}
+
+.ticket-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 0.9rem;
+}
+
+.ticket-table th,
+.ticket-table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e2e2e2;
+}
+
+.ticket-table th {
+  background: #f0f0f0;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  background: #ececec;
+  color: #444;
+  white-space: nowrap;
+}
+
+.status-open {
+  background: #e8eef4;
+}
+
+.status-in_progress {
+  background: #f3efe3;
+}
+
+.status-resolved {
+  background: #e7f0e7;
+}
+
+.status-closed {
+  background: #ececec;
+  color: #777;
+}
+
+.ticket-meta {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 0.25rem 0.5rem;
+  margin: 1rem 0;
+}
+
+.ticket-meta dt {
+  font-weight: 600;
+  color: #555;
+}
+
+.ticket-meta dd {
+  margin: 0;
+}
+
+.description {
+  background: #fff;
+  border: 1px solid #e2e2e2;
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  white-space: pre-wrap;
+}
+
+.comments {
+  list-style: none;
+  padding: 0;
+}
+
+.comments li {
+  background: #fff;
+  border: 1px solid #e2e2e2;
+  border-radius: 4px;
+  padding: 0.6rem 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.comments li p {
+  margin: 0.4rem 0 0;
+}
+
+.muted {
+  color: #888;
+}
+
+.error {
+  color: #a33;
+}
