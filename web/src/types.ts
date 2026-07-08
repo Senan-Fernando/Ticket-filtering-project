@@ -7,6 +7,7 @@ export interface Ticket {
   assigneeId: number | null;
   assigneeName: string | null;
   slaHours: number;
+  slaStatus: 'ok' | 'at_risk' | 'breached';
   commentCount: number;
   createdAt: string;
   updatedAt: string;

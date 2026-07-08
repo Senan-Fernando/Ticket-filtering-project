@@ -1,23 +1,36 @@
 import { pool } from '../db';
 import { toTicketDto, type TicketDto, type TicketRow } from '../mappers';
 import * as usersRepository from '../users/users.repository';
-import * as commentsRepository from '../comments/comments.repository';
+import type { ListTicketsQuery } from './tickets.schema';
 
-export async function listTickets(): Promise<TicketDto[]> {
-  const { rows } = await pool.query<TicketRow>(
-    'select * from tickets order by created_at desc'
-  );
+export async function listTickets(filters: ListTicketsQuery = {}): Promise<TicketDto[]> {
+  const conditions: string[] = [];
+  const values: unknown[] = [];
 
-  const result: TicketDto[] = [];
-  for (const row of rows) {
-    // look up assignee
-    const assigneeName = row.assignee_id
-      ? await usersRepository.findNameById(row.assignee_id)
-      : null;
-    const commentCount = await commentsRepository.countForTicket(row.id);
-    result.push(toTicketDto(row, assigneeName, commentCount));
+  if (filters.status) {
+    values.push(filters.status);
+    conditions.push(`t.status = $${values.length}`);
   }
-  return result;
+  if (filters.assigneeId === 'unassigned') {
+    conditions.push('t.assignee_id is null');
+  } else if (filters.assigneeId !== undefined) {
+    values.push(filters.assigneeId);
+    conditions.push(`t.assignee_id = $${values.length}`);
+  }
+
+  const where = conditions.length ? `where ${conditions.join(' and ')}` : '';
+  const { rows } = await pool.query(
+    `select t.*, u.name as assignee_name,
+            (select count(*) from comments c where c.ticket_id = t.id) as comment_count
+       from tickets t
+       left join users u on u.id = t.assignee_id
+      ${where}
+      order by t.created_at desc`,
+    values
+  );
+  return rows.map((row) =>
+    toTicketDto(row, row.assignee_name ?? null, Number(row.comment_count))
+  );
 }
 
 export async function getTicketById(id: number): Promise<TicketDto | null> {
