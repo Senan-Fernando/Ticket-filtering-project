@@ -25,7 +25,7 @@ describe('GET /tickets', () => {
 
     expect(res.statusCode).toBe(200);
     const tickets = res.json();
-    expect(tickets).toHaveLength(3);
+    expect(tickets).toHaveLength(5);
 
     const printer = tickets.find((t: any) => t.subject === 'Printer on fire');
     expect(printer).toMatchObject({
@@ -41,6 +41,72 @@ describe('GET /tickets', () => {
     expect(unassigned.assigneeId).toBeNull();
     expect(unassigned.assigneeName).toBeNull();
     expect(unassigned.commentCount).toBe(0);
+  });
+
+  const subjects = (res: { json: () => any }) => res.json().map((t: any) => t.subject).sort();
+
+  it('filters by status', async () => {
+    const res = await app.inject({ method: 'GET', url: '/tickets?status=open' });
+
+    expect(res.statusCode).toBe(200);
+    expect(subjects(res)).toEqual(['Printer on fire', 'Unassigned question']);
+  });
+
+  it('filters by assignee', async () => {
+    const res = await app.inject({ method: 'GET', url: '/tickets?assigneeId=2' });
+
+    expect(res.statusCode).toBe(200);
+    expect(subjects(res)).toEqual(['Resolved too late', 'Slow reports page']);
+  });
+
+  it('combines status and assignee filters', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/tickets?status=resolved&assigneeId=1',
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(subjects(res)).toEqual(['Resolved in time']);
+  });
+
+  it('filters unassigned tickets', async () => {
+    const res = await app.inject({ method: 'GET', url: '/tickets?assigneeId=unassigned' });
+
+    expect(res.statusCode).toBe(200);
+    expect(subjects(res)).toEqual(['Unassigned question']);
+  });
+
+  it('rejects an invalid status filter', async () => {
+    const res = await app.inject({ method: 'GET', url: '/tickets?status=archived' });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error).toBe('Validation failed');
+  });
+
+  it('rejects an invalid assignee filter', async () => {
+    const res = await app.inject({ method: 'GET', url: '/tickets?assigneeId=nope' });
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('reports the SLA status of each ticket', async () => {
+    const res = await app.inject({ method: 'GET', url: '/tickets' });
+
+    const bySubject = Object.fromEntries(
+      res.json().map((t: any) => [t.subject, t.slaStatus])
+    );
+    expect(bySubject).toEqual({
+      // 2h into a 4h SLA (50%) — still on track
+      'Printer on fire': 'ok',
+      // 2 days into a 24h SLA, unresolved — breached
+      'Slow reports page': 'breached',
+      // 1h into an 8h SLA
+      'Unassigned question': 'ok',
+      // resolved after 2h of a 24h SLA
+      'Resolved in time': 'ok',
+      // resolved after 5h of a 4h SLA
+      'Resolved too late': 'breached',
+    });
   });
 });
 
